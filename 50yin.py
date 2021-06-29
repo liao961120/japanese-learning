@@ -15,13 +15,12 @@ hiragana = [ x.split(' ')[0] for x in jap ]
 katagana = [ x.split(' ')[1] for x in jap ]
 
 
-#%%
+# Listen and write down hiragana 
 audio = pathlib.Path('audio/50yin/')
-
 idx = []
 for i in range(REPEAT):
 	idx += list(range(len(roman)))
-idx = random.sample(idx, len(roman) * REPEAT)
+random.shuffle(idx)
 
 for i in idx:
 	mp3 = audio / f"{roman[i]}.mp3"
@@ -30,7 +29,9 @@ for i in idx:
 		os.system(f"cvlc --play-and-exit {mp3} >/dev/null 2>&1")
 
 	print("Write down your answer...")
-	time.sleep(3)
+	time.sleep(4)
 	print(f'ANSWER:  {hiragana[i]}')
-	print('\n')
+	print()
+
+
 # %%
