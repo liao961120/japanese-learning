@@ -34,10 +34,3 @@ for char in data_sub:
 	time.sleep(3.5)
 	print(f'ANSWER:  {char["form"]} {char["roman"]}')
 	print()
-
-
-# %%
-
-
-
-# %%
