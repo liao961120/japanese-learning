@@ -14,6 +14,9 @@
 <body>
 
     <div id="app">
+        <span class="displayLabel" :class="{ 'ansLab': showAnswer, hintLab: !showAnswer }">
+            {{ showAnswer ? 'Answer' : 'Hint' }}
+        </span>
 
         <!-- Hint -->
         <div v-if="currChar !== null" v-show="!showAnswer" class="hint">
@@ -22,12 +25,14 @@
             <img v-if="hintTypes.includes('katakana')" :src="currChar.img_kata" :alt="currChar.katakana">
         </div>
         <div v-else class="hint"></div>
+
         <!-- Answer -->
         <div class="answer hint" v-if="currChar !== null" v-show="showAnswer">
             <span v-if="answerTypes.includes('roman')">{{ currChar.roman }}</span>
             <img v-if="answerTypes.includes('hiragana')" :src="currChar.img_hira" :alt="currChar.hiragana">
             <img v-if="answerTypes.includes('katakana')" :src="currChar.img_kata" :alt="currChar.katakana">
         </div>
+        
 
         <template v-if="currChar !== null">
             <audio v-if="hintTypes.includes('audio') & showAnswer == false" 
@@ -216,6 +221,7 @@
             flex-direction: row;
             justify-content: space-around;
             flex-grow: 1;
+            margin-top: 1em;
         }
 
         .hint span {
@@ -285,6 +291,23 @@
         .candidates > button {
             min-width: 6em;
             margin: 0 .5em;
+        }
+        .displayLabel {
+            display: block;
+            width: 4.1em;
+            line-height: 1.5em;
+            margin: 0 auto 0.5em auto;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .ansLab {
+            background: red;
+            color: white;
+        }
+        .hintLab {
+            background: black;
+            color: rgb(0, 255, 0);
         }
     </style>
 </body>
