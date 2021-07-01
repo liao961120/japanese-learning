@@ -58,8 +58,8 @@ d <- tibble(
     hiragana = hiragana,
     katakana = katakana,
     roman = basename(form_img) %>% gsub(".png", "", ., fixed = T),
+    audio = file.path("data/audio", paste0(roman, ".mp3")),
     img_hira = file.path("data/hiragana", basename(form_img)),
-    img_kata = file.path("data/katakana", basename(form_img)),
-    audio = file.path("data/audio", paste0(roman, ".mp3"))
+    img_kata = file.path("data/katakana", basename(form_img))
 )
-writeLines(jsonlite::toJSON(d), "gojuon.json")
+writeLines(jsonlite::toJSON(d, pretty = T), "gojuon.json")
