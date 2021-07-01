@@ -13,14 +13,87 @@
 <body>
 
     <div id="app">
-        <button @click="nextChar">Next</button>
 
-        {{ currChar }}
-        
-        <div id="deck">
-            <button v-if="allSelected" @click="unselectAll">Unselect all</button>
-            <button v-else @click="selectAll">Select all</button>
+        <!-- Hint -->
+        <div v-if="currChar !== null" v-show="!showAnswer" class="hint">
+            <span v-if="hintTypes.includes('roman')">{{ currChar.roman }}</span>
+            <img v-if="hintTypes.includes('hiragana')" :src="currChar.img_hira" :alt="currChar.hiragana">
+            <img v-if="hintTypes.includes('katakana')" :src="currChar.img_kata" :alt="currChar.katakana">
+        </div>
+        <div v-else class="hint"></div>
+        <!-- Answer -->
+        <div class="answer hint" v-if="currChar !== null" v-show="showAnswer">
+            <span v-if="answerTypes.includes('roman')">{{ currChar.roman }}</span>
+            <img v-if="answerTypes.includes('hiragana')" :src="currChar.img_hira" :alt="currChar.hiragana">
+            <img v-if="answerTypes.includes('katakana')" :src="currChar.img_kata" :alt="currChar.katakana">
+        </div>
 
+        <template v-if="currChar !== null">
+            <audio v-if="hintTypes.includes('audio') & showAnswer == false" 
+            controls :src="currChar.audio">
+                Your browser does not support the <code>audio</code> element.
+            </audio>
+            <audio v-else-if="answerTypes.includes('audio') & showAnswer == true" 
+            controls :src="currChar.audio">
+                Your browser does not support the <code>audio</code> element.
+            </audio>
+            <div class="audioPlaceholder" 
+            v-else-if="answerTypes.includes('audio') | hintTypes.includes('audio')"></div>
+        </template>
+        <div class="audioPlaceholder" v-else v-show="hintTypes.includes('audio') | answerTypes.includes('audio')"></div>
+
+
+        <!-- Next buttons -->
+        <button @click="nextChar" class="next">
+            {{ showAnswer ? 'Next' : 'Answer' }}
+        </button>
+
+        <div class="control hintOps">
+            <span>
+                <input type="checkbox" value="roman" v-model="hintTypes">
+                <label>Roman</label>
+            </span>
+            <span>
+                <input type="checkbox" value="hiragana" v-model="hintTypes">
+                <label>Hiragana</label>
+            </span>
+            <span>
+                <input type="checkbox" value="katakana" v-model="hintTypes">
+                <label>Katakana</label>
+            </span>
+            <span>
+                <input type="checkbox" value="audio" v-model="hintTypes">
+                <label>Audio</label>
+            </span>
+        </div>
+        <div class="control ansOps">
+            <span>
+                <input type="checkbox" value="roman" v-model="answerTypes">
+                <label>Roman</label>
+            </span>
+            <span>
+                <input type="checkbox" value="hiragana" v-model="answerTypes">
+                <label>Hiragana</label>
+            </span>
+            <span>
+                <input type="checkbox" value="katakana" v-model="answerTypes">
+                <label>Katakana</label>
+            </span>
+            <span>
+                <input type="checkbox" value="audio" v-model="answerTypes">
+                <label>Audio</label>
+            </span>
+        </div>
+
+        <!-- Select all button -->
+        <div class="candidates">
+            <button @click="unselectAll" v-if="allSelected">Unselect all</button>
+            <button @click="selectAll" v-else>Select all</button>
+            <button @click="hideCandidates = !hideCandidates">
+                {{ hideCandidates ? 'Show' : 'Hide' }}
+            </button>
+        </div>
+        <div id="deck" v-show="!hideCandidates">
             <div v-for="(char, idx) in chars" :key="idx">
                 <input type="checkbox" :value="char" v-model="selected">
                 <label for="coding">
@@ -28,7 +101,7 @@
                 </label>
             </div>
         </div>
-        
+
     </div>
 
     <script>
@@ -39,32 +112,50 @@
                 selected: [],
                 allSelected: false,
                 currChar: null,
+                hintTypes: ["roman", "audio"],
+                answerTypes: ["katakana"],
+                showAnswer: false,
+                hideCandidates: false,
             },
             // computed: {},
             methods: {
-                selectAll: function() {
+                selectAll: function () {
                     this.selected = this.chars;
                     this.allSelected = true;
                 },
-                unselectAll: function() {
-                    for (var i=0; i<this.chars.length; i++)
+                unselectAll: function () {
+                    for (var i = 0; i < this.chars.length; i++)
                         this.selected = [];
-                        this.allSelected = false;
+                    this.allSelected = false;
                 },
-                nextChar: function() {
-                    if (this.selected.length < 2) return
-                    var sample = this.selected[Math.floor(Math.random() * this.selected.length)];
-                    while (this.currChar === sample)
-                        sample = this.selected[Math.floor(Math.random() * this.selected.length)];
-                    this.currChar = sample;
+                nextChar: function () {
+                    if (this.showAnswer) {
+                        if (this.selected.length < 2) return
+                        var sample = this.selected[Math.floor(Math.random() * this.selected.length)];
+                        while (this.currChar === sample)
+                            sample = this.selected[Math.floor(Math.random() * this.selected.length)];
+                        this.currChar = sample;
+                        
+                        if (this.hintTypes.includes("audio")) {
+                            var audio = new Audio(this.currChar.audio);
+                            audio.play();
+                        }
+                        this.showAnswer = false;
+                    } else {
+                        this.showAnswer = true;
+                        if (this.answerTypes.includes("audio")) {
+                            var audio = new Audio(this.currChar.audio);
+                            audio.play();
+                        }
+                    }
                 }
             },
             created: function () {
                 this.$http.get('./gojuon.json').then(response => {
                     // get body data
                     this.chars = response.body;
-                    this.selectAll();
-
+                    this.selected = this.chars.slice(0, 5);
+                    this.currChar = this.selected[0];
                 }, response => {
                     // error callback
                     console.log("error loading data")
@@ -73,6 +164,84 @@
         })
     </script>
 
+    <style scoped>
+        .hint {
+            height: 120px;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            flex-grow: 1;
+        }
+
+        .hint span {
+            height: 100%;
+            line-height: 110px;
+            vertical-align: middle;
+            margin: 0;
+            padding: 0;
+            font-size: 110px;
+            font-weight: bold;
+            font-family: 'Times New Roman', Times, serif;
+            font-style: italic;
+        }
+        audio, .audioPlaceholder {
+            display: block;
+            width: 270px;
+            height: 30px;
+            margin: 0 auto;
+            padding: 0 auto;
+        }
+
+        button.next {
+            display: block;
+            max-width: 500px;
+            width: 100%;
+            font-size: 1.5em;
+            margin: .8em auto 0 auto;
+            padding: 0 auto;
+        }
+
+        .control {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+
+        .control>* {
+            margin: 0 .15em;
+        }
+        .hintOps::before {
+            content: "Hints: ";
+            display: inline-block;
+            width: 3.2em;
+        }
+        .ansOps::before {
+            content: "Answer: ";
+            display: inline-block;
+            width: 3.2em;
+        }
+
+        #deck {
+            max-width: 650px;
+            margin: 0 auto;
+            padding: 0 auto;
+            width: 100%;
+            height: 840px;
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+        }
+        .candidates {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            margin-top: 1em;
+        }
+        .candidates > button {
+            min-width: 6em;
+            margin: 0 .5em;
+        }
+    </style>
 </body>
 
 </html>
