@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>五十音</title>
     <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.3"></script>
 </head>
 
@@ -157,12 +158,29 @@
                         var audio = this.chars[i].audio;
                         this.audioCache[audio] = new Audio(audio);
                     }
-                    this.selected = this.chars.slice(0, 5);
+
+                    // Load selected cache
+                    let cache = localStorage.getItem("selected");
+                    if (cache) {
+                        try {
+                            this.selected = JSON.parse(cache);
+                        } catch(e) {
+                            localStorage.removeItem("selected");
+                        }
+                    }
+                    if (this.selected.length < 1)
+                        this.selected = this.chars.slice(0, 5);
+                    
                     this.currChar = this.selected[0];
                 }, response => {
                     // error callback
                     console.log("error loading data")
                 });
+            },
+            watch: {
+                selected() {
+                    localStorage.setItem("selected", JSON.stringify(this.selected));
+                }
             }
         })
     </script>
