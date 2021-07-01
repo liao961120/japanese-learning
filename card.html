@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五十音</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.3"></script>
+</head>
+
+<body>
+
+    <div id="app">
+        <button @click="nextChar">Next</button>
+
+        {{ currChar }}
+        
+        <div id="deck">
+            <button v-if="allSelected" @click="unselectAll">Unselect all</button>
+            <button v-else @click="selectAll">Select all</button>
+
+            <div v-for="(char, idx) in chars" :key="idx">
+                <input type="checkbox" :value="char" v-model="selected">
+                <label for="coding">
+                    {{ char.hiragana }} / {{ char.katakana }} / {{ char.roman }}
+                </label>
+            </div>
+        </div>
+        
+    </div>
+
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                chars: [],
+                selected: [],
+                allSelected: false,
+                currChar: null,
+            },
+            // computed: {},
+            methods: {
+                selectAll: function() {
+                    this.selected = this.chars;
+                    this.allSelected = true;
+                },
+                unselectAll: function() {
+                    for (var i=0; i<this.chars.length; i++)
+                        this.selected = [];
+                        this.allSelected = false;
+                },
+                nextChar: function() {
+                    if (this.selected.length < 2) return
+                    var sample = this.selected[Math.floor(Math.random() * this.selected.length)];
+                    while (this.currChar === sample)
+                        sample = this.selected[Math.floor(Math.random() * this.selected.length)];
+                    this.currChar = sample;
+                }
+            },
+            created: function () {
+                this.$http.get('./gojuon.json').then(response => {
+                    // get body data
+                    this.chars = response.body;
+                    this.selectAll();
+
+                }, response => {
+                    // error callback
+                    console.log("error loading data")
+                });
+            }
+        })
+    </script>
+
+</body>
+
+</html>
