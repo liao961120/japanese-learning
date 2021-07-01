@@ -160,7 +160,7 @@
                     }
 
                     // Load selected cache
-                    let cache = localStorage.getItem("selected");
+                    var cache = localStorage.getItem("selected");
                     if (cache) {
                         try {
                             this.selected = JSON.parse(cache);
@@ -170,8 +170,26 @@
                     }
                     if (this.selected.length < 1)
                         this.selected = this.chars.slice(0, 5);
-                    
                     this.currChar = this.selected[0];
+
+                    // Load hintTypes cache
+                    cache = localStorage.getItem("hintTypes");
+                    if (cache) {
+                        try {
+                            this.hintTypes = JSON.parse(cache);
+                        } catch(e) {
+                            localStorage.removeItem("hintTypes");
+                        }
+                    }
+                    // Load answerTypes cache
+                    cache = localStorage.getItem("answerTypes");
+                    if (cache) {
+                        try {
+                            this.answerTypes = JSON.parse(cache);
+                        } catch(e) {
+                            localStorage.removeItem("answerTypes");
+                        }
+                    }
                 }, response => {
                     // error callback
                     console.log("error loading data")
@@ -180,7 +198,13 @@
             watch: {
                 selected() {
                     localStorage.setItem("selected", JSON.stringify(this.selected));
-                }
+                },
+                hintTypes() {
+                    localStorage.setItem("hintTypes", JSON.stringify(this.hintTypes));
+                },
+                answerTypes() {
+                    localStorage.setItem("answerTypes", JSON.stringify(this.answerTypes));
+                },
             }
         })
     </script>
