@@ -24,7 +24,7 @@
         <p v-show="!showAnswer" class="answer">🔊</p>
         <button @click="nextWord" class="next">
             {{ showAnswer ? 'Next' : 'Show Answer' }} <br />
-            <span style="color:rgb(71, 71, 71);font-size:0.85em;">(Enter)</span>
+            <span style="color:rgb(71, 71, 71);font-size:0.8em;">(press →)</span>
         </button>
 
         <!-- Add words (Server needed) -->
@@ -135,7 +135,7 @@
 
     <script>
         document.addEventListener('keyup', function(e) {
-            if (e.keyCode == 13)
+            if (e.keyCode == 39)
                 document.querySelector("button.next").click();
         });
     </script>
