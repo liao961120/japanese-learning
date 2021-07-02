@@ -1,7 +1,7 @@
 # Backend Server for Listening Test
 
-- Front end: https://yongfu.name/japanese-learning/words.html
-- Dictionary (API): https://github.com/Asutorufa/hujiang_dictionary
+- Front end: <http://yongfu.name/japanese-learning/words.html>
+- Dictionary (API): <http://github.com/Asutorufa/hujiang_dictionary>
 
 ## Usage
 
@@ -9,4 +9,4 @@
 flask run
 ```
 
-and go to <https://yongfu.name/japanese-learning/words.html>.
+and go to <http://yongfu.name/japanese-learning/words.html>.
