@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Listening Test</title>
+    <title>Word Listening Test</title>
     <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
     <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.3"></script>
@@ -23,15 +23,16 @@
         </p>
         <p v-show="!showAnswer" class="answer">🔊</p>
         <button @click="nextWord" class="next">
-            {{ showAnswer ? 'Next' : 'Show Answer' }}
+            {{ showAnswer ? 'Next' : 'Show Answer' }} <br />
+            <span style="color:rgb(71, 71, 71);font-size:0.85em;">(Enter)</span>
         </button>
-
 
         <!-- Add words (Server needed) -->
         <button @click="hideTerms = !hideTerms" class="hide">
-            {{ hideTerms ? 'Show' : 'Hide' }}
+            {{ hideTerms ? 'Show control' : 'Hide below' }}
         </button>
         <div class="control" v-show="!hideTerms">
+            <h3>Test Words</h3>
             <div class="loadedTerms">
                 <div v-for="term in loadedWordsSrc" class="item">
                     <span>{{ term[0] }}</span>
@@ -39,17 +40,17 @@
                 </div>
             </div>
 
-            <input type="text" v-model="newWord" placeholder="祈祷">
-            <button @click="addTerm">Add Term</button>
+            <h3>Pick some words below</h3>
+            <input type="text" v-model="deckFilter" placeholder="Search">
             <div class="toQuery">
-                <div v-for="term in toQuery" class="item">
-                    <span>{{ term }}</span>
-                    <button @click="rmTerm(term)">Delete</button>
+                <div v-for="term in deckFiltered" class="item">
+                    <span>{{ term[0] }}</span>
+                    <button @click="addTerm(term)" :disabled="loadedWordsSrc.map(w=>w[0]).includes(term[0])">
+                        Add
+                    </button>
                 </div>
             </div>
-            <button @click="loadTerms">Load Terms <br> (server required)</button>
         </div>
-
     </div>
 
     <script>
@@ -59,14 +60,21 @@
                 toQuery: ['こにもつしゃ', '言葉', '祝词'],
                 newWord: "",
                 server: 'http://127.0.0.1:5000',
-                loadedWordsSrc: [ 
+                deckFilter: "",
+                deck: [ 
                     ['祝詞 [のりと][norito]', 'https://tts.hjapi.com/jp/199013E6EDCC636B2E44D9D208D87ABA'], 
                     ['言葉 [ことば][kotoba]', 'https://tts.hjapi.com/jp/9BBEA60A3F7F356C']
                 ],
+                loadedWordsSrc: [],
                 loadedWords: [],
                 showAnswer: false,
                 currWord: ['祝詞 [のりと][norito]', new Audio('https://tts.hjapi.com/jp/199013E6EDCC636B2E44D9D208D87ABA')],
                 hideTerms: false,
+            },
+            computed: {
+                deckFiltered() {
+                    return this.deck.filter(t => t[0].includes(this.deckFilter));
+                }
             },
             watch: {
                 loadedWordsSrc() {
@@ -77,29 +85,15 @@
                 }
             },
             methods: {
-                addTerm: function () {
-                    this.newWord = this.newWord.trim();
-                    if (this.newWord == "") return
-                    if (this.toQuery.includes(this.newWord)) return
-                    this.toQuery.push(this.newWord);
+                addTerm: function (term) {
+                    if (this.loadedWordsSrc.map(w => w[0]).includes(term[0])) return
+                    this.loadedWordsSrc.push(term);
                 },
                 rmTerm: function (term) {
                     this.toQuery = this.toQuery.filter(t => t !== term);
                 },
                 rmTermLoaded: function (term) {
                     this.loadedWordsSrc = this.loadedWordsSrc.filter(t => t[0] !== term);
-                },
-                loadTerms: function () {
-                    var terms = encodeURIComponent(JSON.stringify(this.toQuery));
-                    var url = `${this.server}/?terms=${terms}`
-                    console.log(url)
-                    this.$http.get(url).then(response => {
-                        // get body data
-                        this.loadedWordsSrc = response.body;
-                    }, response => {
-                        // error callback
-                        console.log("error loading data")
-                    });
                 },
                 nextWord: function() {
                     if (this.showAnswer) {
@@ -117,29 +111,39 @@
                 }
             },
             created: function() {
-                // Load from storage
-                // let cache = localStorage.getItem("loadedWordsSrc");
-                // if (cache) {
-                //     try {
-                //         this.loadedWordsSrc = JSON.parse(cache);
-                //     } catch(e) {
-                //         localStorage.removeItem("loadedWordsSrc");
-                //     }
-                // } 
-                // // To Do: get loadedWordsSrc from JSON
-                   // Load from JSON
+                // Load deck from JSON
                 this.$http.get('./server_words/words.json').then(response => {
                         // get body data
-                        this.loadedWordsSrc = response.body;
+                        this.deck = response.body;
                     }, response => {
                         // error callback
                         console.log("error loading data")
                 });
+
+                // Load from storage
+                let cache = localStorage.getItem("loadedWordsSrc");
+                if (cache) {
+                    try {
+                        this.loadedWordsSrc = JSON.parse(cache);
+                    } catch(e) {
+                        localStorage.removeItem("loadedWordsSrc");
+                    }
+                } 
             }
         })
     </script>
 
+    <script>
+        document.addEventListener('keyup', function(e) {
+            if (e.keyCode == 13)
+                document.querySelector("button.next").click();
+        });
+    </script>
+
     <style>
+        h3 {
+            margin-bottom: 0.2em;
+        }
         .control {
             max-width: 500px;
             margin: 0 auto 0 auto;
@@ -147,7 +151,8 @@
         }
         button.hide {
             display: block;
-            width: 3.5em;
+            width: 6.9em;
+            font-size: 1em;
             margin: 1em auto;
         }
         .toQuery, .loadedTerms {
