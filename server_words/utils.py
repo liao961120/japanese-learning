@@ -21,7 +21,7 @@ def lookup(term):
             append_next = True
             continue
         if append_next:
-            heads.append(line)
+            heads.append(line.strip())
             append_next = False
 
     matched = []
