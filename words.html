@@ -112,7 +112,7 @@
             },
             created: function() {
                 // Load deck from JSON
-                this.$http.get('./server_words/words.json').then(response => {
+                this.$http.get('./server_words/words_local.json').then(response => {
                         // get body data
                         this.deck = response.body;
                     }, response => {
