@@ -33,8 +33,9 @@
         </button>
         <div class="control" v-show="!hideTerms">
             <div class="loadedTerms">
-                <div v-for="term in loadedWords" class="item">
+                <div v-for="term in loadedWordsSrc" class="item">
                     <span>{{ term[0] }}</span>
+                    <button @click="rmTermLoaded(term[0])">Delete</button>
                 </div>
             </div>
 
@@ -58,13 +59,22 @@
                 toQuery: ['こにもつしゃ', '言葉', '祝词'],
                 newWord: "",
                 server: 'http://127.0.0.1:5000',
-                loadedWords: [ 
-                    ['祝詞 [のりと][norito]', new Audio('https://tts.hjapi.com/jp/199013E6EDCC636B2E44D9D208D87ABA')], 
-                    ['言葉 [ことば][kotoba]', new Audio('https://tts.hjapi.com/jp/9BBEA60A3F7F356C')]
+                loadedWordsSrc: [ 
+                    ['祝詞 [のりと][norito]', 'https://tts.hjapi.com/jp/199013E6EDCC636B2E44D9D208D87ABA'], 
+                    ['言葉 [ことば][kotoba]', 'https://tts.hjapi.com/jp/9BBEA60A3F7F356C']
                 ],
+                loadedWords: [],
                 showAnswer: false,
                 currWord: ['祝詞 [のりと][norito]', new Audio('https://tts.hjapi.com/jp/199013E6EDCC636B2E44D9D208D87ABA')],
                 hideTerms: false,
+            },
+            watch: {
+                loadedWordsSrc() {
+                    // Preload audio
+                    this.loadedWords = this.loadedWordsSrc.map(w => [w[0], new Audio(w[1])]);
+                    if (this.loadedWordsSrc.length > 0)
+                        localStorage.setItem("loadedWordsSrc", JSON.stringify(this.loadedWordsSrc));
+                }
             },
             methods: {
                 addTerm: function () {
@@ -76,13 +86,16 @@
                 rmTerm: function (term) {
                     this.toQuery = this.toQuery.filter(t => t !== term);
                 },
+                rmTermLoaded: function (term) {
+                    this.loadedWordsSrc = this.loadedWordsSrc.filter(t => t[0] !== term);
+                },
                 loadTerms: function () {
                     var terms = encodeURIComponent(JSON.stringify(this.toQuery));
                     var url = `${this.server}/?terms=${terms}`
                     console.log(url)
                     this.$http.get(url).then(response => {
                         // get body data
-                        this.loadedWords = response.body.map(word => [ word[0], new Audio(word[1]) ]);
+                        this.loadedWordsSrc = response.body;
                     }, response => {
                         // error callback
                         console.log("error loading data")
@@ -102,6 +115,26 @@
                         this.showAnswer = true;
                     }
                 }
+            },
+            created: function() {
+                // Load from storage
+                // let cache = localStorage.getItem("loadedWordsSrc");
+                // if (cache) {
+                //     try {
+                //         this.loadedWordsSrc = JSON.parse(cache);
+                //     } catch(e) {
+                //         localStorage.removeItem("loadedWordsSrc");
+                //     }
+                // } 
+                // // To Do: get loadedWordsSrc from JSON
+                   // Load from JSON
+                this.$http.get('./server_words/words.json').then(response => {
+                        // get body data
+                        this.loadedWordsSrc = response.body;
+                    }, response => {
+                        // error callback
+                        console.log("error loading data")
+                });
             }
         })
     </script>
@@ -139,7 +172,7 @@
             background: rgb(128, 199, 69);
         }
 
-        .toQuery>.item>button {
+        .toQuery>.item>button, .loadedTerms>.item>button {
             float: right;
             margin: 0;
         }
