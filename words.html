@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listening Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.3"></script>
+</head>
+
+<body>
+    <div id="app">
+        <span class="displayLabel" :class="{ 'ansLab': showAnswer, hintLab: !showAnswer }">
+            {{ showAnswer ? 'Answer' : 'Hint' }}
+        </span>
+
+        <!-- Listening Test -->
+        <p v-show="showAnswer" class="answer">
+            {{ currWord[0] }}
+        </p>
+        <p v-show="!showAnswer" class="answer">🔊</p>
+        <button @click="nextWord" class="next">
+            {{ showAnswer ? 'Next' : 'Show Answer' }}
+        </button>
+
+
+        <!-- Add words (Server needed) -->
+        <button @click="hideTerms = !hideTerms" class="hide">
+            {{ hideTerms ? 'Show' : 'Hide' }}
+        </button>
+        <div class="control" v-show="!hideTerms">
+            <div class="loadedTerms">
+                <div v-for="term in loadedWords" class="item">
+                    <span>{{ term[0] }}</span>
+                </div>
+            </div>
+
+            <input type="text" v-model="newWord" placeholder="祈祷">
+            <button @click="addTerm">Add Term</button>
+            <div class="toQuery">
+                <div v-for="term in toQuery" class="item">
+                    <span>{{ term }}</span>
+                    <button @click="rmTerm(term)">Delete</button>
+                </div>
+            </div>
+            <button @click="loadTerms">Load Terms <br> (server required)</button>
+        </div>
+
+    </div>
+
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                toQuery: ['こにもつしゃ', '言葉', '祝词'],
+                newWord: "",
+                server: 'http://127.0.0.1:5000',
+                loadedWords: [ 
+                    ['祝詞 [のりと][norito]', new Audio('https://tts.hjapi.com/jp/199013E6EDCC636B2E44D9D208D87ABA')], 
+                    ['言葉 [ことば][kotoba]', new Audio('https://tts.hjapi.com/jp/9BBEA60A3F7F356C')]
+                ],
+                showAnswer: false,
+                currWord: ['祝詞 [のりと][norito]', new Audio('https://tts.hjapi.com/jp/199013E6EDCC636B2E44D9D208D87ABA')],
+                hideTerms: false,
+            },
+            methods: {
+                addTerm: function () {
+                    this.newWord = this.newWord.trim();
+                    if (this.newWord == "") return
+                    if (this.toQuery.includes(this.newWord)) return
+                    this.toQuery.push(this.newWord);
+                },
+                rmTerm: function (term) {
+                    this.toQuery = this.toQuery.filter(t => t !== term);
+                },
+                loadTerms: function () {
+                    var terms = encodeURIComponent(JSON.stringify(this.toQuery));
+                    var url = `${this.server}/?terms=${terms}`
+                    console.log(url)
+                    this.$http.get(url).then(response => {
+                        // get body data
+                        this.loadedWords = response.body.map(word => [ word[0], new Audio(word[1]) ]);
+                    }, response => {
+                        // error callback
+                        console.log("error loading data")
+                    });
+                },
+                nextWord: function() {
+                    if (this.showAnswer) {
+                        if (this.loadedWords.length < 2) return
+                        var sample = this.loadedWords[Math.floor(Math.random() * this.loadedWords.length)];
+                        while (this.currWord === sample)
+                            sample = this.loadedWords[Math.floor(Math.random() * this.loadedWords.length)];
+                        this.currWord = sample;
+                        this.currWord[1].play();
+                        
+                        this.showAnswer = false;
+                    } else {
+                        this.showAnswer = true;
+                    }
+                }
+            }
+        })
+    </script>
+
+    <style>
+        .control {
+            max-width: 500px;
+            margin: 0 auto 0 auto;
+            padding: 0 auto;
+        }
+        button.hide {
+            display: block;
+            width: 3.5em;
+            margin: 1em auto;
+        }
+        .toQuery, .loadedTerms {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-content: space-around;
+        }
+        .loadedTerms {
+            margin-bottom: 1em;
+        }
+
+        .toQuery>div, .loadedTerms>div {
+            background: rgb(125, 207, 194);
+            border-radius: 5px;
+            padding: 0.3em 0.5em;
+            margin: 3px 0;
+        }
+        .loadedTerms>div {
+            background: rgb(128, 199, 69);
+        }
+
+        .toQuery>.item>button {
+            float: right;
+            margin: 0;
+        }
+        button.next {
+            display: block;
+            max-width: 500px;
+            width: 100%;
+            font-size: 1.5em;
+            margin: .8em auto 2em auto;
+            padding: 0 auto;
+        }
+
+        .answer {
+            min-height: 2.5em;
+            font-size: 2.3em;
+            text-align: center;
+            vertical-align: middle;
+            line-height: 2.3em;
+            margin: 0;
+        }
+        .displayLabel {
+            display: block;
+            width: 4.1em;
+            line-height: 1.5em;
+            margin: 0 auto 0.5em auto;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .ansLab {
+            background: red;
+            color: white;
+        }
+        .hintLab {
+            background: black;
+            color: rgb(0, 255, 0);
+        }
+    </style>
+</body>
+
+</html>
