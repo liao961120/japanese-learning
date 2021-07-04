@@ -12,22 +12,22 @@ logging.info("Start searching terms")
 
 with open("wordlist.txt", encoding="utf-8") as f:
     words = f.read().strip()
-    words = words.split()
-with open("words.json", encoding="utf-8") as f:
-    output = json.load(f)
-    saved_words = { w[0] for w in output }
-    
+    words = [ w.strip() for w in words.split() if not w.strip().startswith('#') ]
+# with open("words.json", encoding="utf-8") as f:
+#     output = json.load(f)
+#     saved_words = { w[0] for w in output }
+
+output = []
 for word in words:
-    downloaded = sum(1 for w in saved_words if word in w)
-    if downloaded > 0: continue
     # Search word in online dict
     query = lookup(word)
     if query is None: 
         logging.warning(f"{word} not available")
         continue
     # Download audio
-    audio_path = download_audio(query[1])
-    output.append([query[0], audio_path])
+    for word in query:
+        audio_path = download_audio(word[1])
+        output.append([word[0], audio_path])
 
 
 with open("words.json", "w", encoding="utf-8") as f:

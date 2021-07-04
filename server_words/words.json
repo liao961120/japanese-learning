@@ -1,9 +1,5 @@
 [
  [
-  "ミネラルウォーター [ミネラルウォーター][mineraruuxootaa]",
-  "server_words/audio/F12E84FCFB9983B8BFE0A8BDDD4E59071E1311358C0D0D2430D41CB1FEF95841.mp3"
- ],
- [
   "サラダ [サラダ][sarada]",
   "server_words/audio/J29342.mp3"
  ],
@@ -154,5 +150,121 @@
  [
   "ミルクティー [みるくてぃー][mirukuthi-]",
   "server_words/audio/5E577C33D72ECB432281E4E8EDD937B5E87FD5BE4F9DA33D.mp3"
+ ],
+ [
+  "ミネラルウォーター [ミネラルウォーター][mineraruuxootaa]",
+  "server_words/audio/F12E84FCFB9983B8BFE0A8BDDD4E59071E1311358C0D0D2430D41CB1FEF95841.mp3"
+ ],
+ [
+  "令 [れい][rei]",
+  "server_words/audio/2EBB461B55B703F8.mp3"
+ ],
+ [
+  "礼 [れい][rei]",
+  "server_words/audio/C1035.mp3"
+ ],
+ [
+  "レイ [れい][rei]",
+  "server_words/audio/F4EF9F771C8BC922.mp3"
+ ],
+ [
+  "例 [れい][rei]",
+  "server_words/audio/2EBB461B55B703F8.mp3"
+ ],
+ [
+  "零 [れい][rei]",
+  "server_words/audio/A2D8125D3A745B66.mp3"
+ ],
+ [
+  "ゼロ [ゼロ][zero]",
+  "server_words/audio/J40701.mp3"
+ ],
+ [
+  "市 [いち][ichi]",
+  "server_words/audio/43507bb5fbb7ec0d7be1a1af0db10f38.mp3"
+ ],
+ [
+  "一 [いち][ichi]",
+  "server_words/audio/J03815.mp3"
+ ],
+ [
+  "壱 [いち][iti]",
+  "server_words/audio/J03815.mp3"
+ ],
+ [
+  "丸 [まる][maru]",
+  "server_words/audio/DBBBE7C71A09908A.mp3"
+ ],
+ [
+  "円 [まる][maru]",
+  "server_words/audio/39FF87A8D2BD9E87.mp3"
+ ],
+ [
+  "マル [まる][maru]",
+  "server_words/audio/3E95679EE23567E7.mp3"
+ ],
+ [
+  "四 [よん][yonn]",
+  "server_words/audio/3F66D2AC96AE4102.mp3"
+ ],
+ [
+  "に [に][ni]",
+  "server_words/audio/1C4EC458D8290DD5.mp3"
+ ],
+ [
+  "さん [さん][-sann]",
+  "server_words/audio/A19E9E36BEBE8783.mp3"
+ ],
+ [
+  "し [し][shi]",
+  "server_words/audio/J30042.mp3"
+ ],
+ [
+  "ご [ご][go]",
+  "server_words/audio/0C55206589FF3188.mp3"
+ ],
+ [
+  "七 [なな][nana]",
+  "server_words/audio/4FAE12E2322CBADB.mp3"
+ ],
+ [
+  "急 [きゅう][kyuu]",
+  "server_words/audio/J18161.mp3"
+ ],
+ [
+  "旧 [きゅう][kyuu]",
+  "server_words/audio/J18161.mp3"
+ ],
+ [
+  "球 [きゅう][kyuu]",
+  "server_words/audio/J18161.mp3"
+ ],
+ [
+  "灸 [きゅう][kyuu]",
+  "server_words/audio/J18161.mp3"
+ ],
+ [
+  "九 [きゅう][kyuu]",
+  "server_words/audio/36475b63917980f3968d8faf6247118f.mp3"
+ ],
+ [
+  "ろく [ろく][roku]",
+  "server_words/audio/8CF8320160A4CDA1.mp3"
+ ],
+ [
+  "蜂 [はち][hachi]",
+  "server_words/audio/C18FACA242389E51.mp3"
+ ],
+ [
+  "八 [はち][hachi]",
+  "server_words/audio/8BF6B707F3E9A63B.mp3"
+ ],
+ [
+  "鉢 [はち][hachi]",
+  "server_words/audio/C7EB29C336E149DC.mp3"
+ ],
+ [
+  "じゅう [じゅう][juu]",
+  "server_words/audio/J33207.mp3"
  ]
 ]
