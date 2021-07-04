@@ -126,9 +126,9 @@
                 sampled: [],
                 allSelected: false,
                 currChar: {
-                    "hiragana": "Get Ready",
-                    "katakana": "Get Ready",
-                    "roman": "Get Ready",
+                    "hiragana": "Ready?",
+                    "katakana": "Ready?",
+                    "roman": "Ready?",
                     "audio": "",
                     "img_hira": "data/ready.png",
                     "img_kata": "data/ready.png"
@@ -209,6 +209,7 @@
                 this.$http.get('./gojuon.json').then(response => {
                     // get body data
                     this.chars = response.body;
+                    this.selected = this.chars.slice(0, 3);
                     // Preload all audio
                     for (var i = 0; i < this.chars.length; i++) {
                         var audio = this.chars[i].audio;
