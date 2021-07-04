@@ -35,10 +35,11 @@
 
 
         <template v-if="currChar !== null">
-            <audio v-if="hintTypes.includes('audio') & showAnswer == false" controls :src="currChar.audio">
+            <audio v-if="hintTypes.includes('audio') & showAnswer == false" controls :src="audioPath(currChar.audio)">
                 Your browser does not support the <code>audio</code> element.
             </audio>
-            <audio v-else-if="answerTypes.includes('audio') & showAnswer == true" controls :src="currChar.audio">
+            <audio v-else-if="answerTypes.includes('audio') & showAnswer == true" controls
+                :src="audioPath(currChar.audio)">
                 Your browser does not support the <code>audio</code> element.
             </audio>
             <div class="audioPlaceholder" v-else-if="answerTypes.includes('audio') | hintTypes.includes('audio')"></div>
@@ -124,13 +125,22 @@
                 selected: [],
                 sampled: [],
                 allSelected: false,
-                currChar: null,
+                currChar: {
+                    "hiragana": "Get Ready",
+                    "katakana": "Get Ready",
+                    "roman": "Get Ready",
+                    "audio": "",
+                    "img_hira": "data/ready.png",
+                    "img_kata": "data/ready.png"
+                },
                 hintTypes: ["roman", "audio"],
                 answerTypes: ["katakana"],
                 repeatTest: true,
                 showAnswer: false,
                 hideCandidates: false,
                 audioCache: {},
+                audioBasePath: './data/audio2',
+                version: "1.0",
             },
             computed: {
                 sampledChar() {
@@ -188,7 +198,11 @@
                     if (this.hintTypes.includes("audio"))
                         this.audioCache[this.currChar.audio].play();
 
+
                     this.showAnswer = false;
+                },
+                audioPath: function (fname) {
+                    return `${this.audioBasePath}/${fname}`;
                 }
             },
             created: function () {
@@ -198,49 +212,27 @@
                     // Preload all audio
                     for (var i = 0; i < this.chars.length; i++) {
                         var audio = this.chars[i].audio;
-                        this.audioCache[audio] = new Audio(audio);
+                        this.audioCache[audio] = new Audio(this.audioPath(audio));
                     }
 
+                    ////////// Local Storage ////////////
+                    const STORAGE = ["selected", "hintTypes", "answerTypes", "repeatTest"];
+                    // Get version
+                    var cache = localStorage.getItem("version");
+                    if (cache == null | cache != this.version) {
+                        STORAGE.forEach(x => {
+                            if (localStorage.getItem(x)) localStorage.removeItem(x)
+                        })
+                        localStorage.setItem("version", this.version);
+                    }
                     // Load selected cache
-                    var cache = localStorage.getItem("selected");
-                    if (cache) {
-                        try {
-                            this.selected = JSON.parse(cache);
-                        } catch (e) {
-                            localStorage.removeItem("selected");
+                    STORAGE.forEach(x => {
+                        cache = localStorage.getItem(x)
+                        if (cache) {
+                            try { this.selected = JSON.parse(cache) }
+                            catch (e) { localStorage.removeItem(x) }
                         }
-                    }
-                    if (this.selected.length < 1)
-                        this.selected = this.chars.slice(0, 5);
-                    this.currChar = this.selected[0];
-
-                    // Load hintTypes cache
-                    cache = localStorage.getItem("hintTypes");
-                    if (cache) {
-                        try {
-                            this.hintTypes = JSON.parse(cache);
-                        } catch (e) {
-                            localStorage.removeItem("hintTypes");
-                        }
-                    }
-                    // Load answerTypes cache
-                    cache = localStorage.getItem("answerTypes");
-                    if (cache) {
-                        try {
-                            this.answerTypes = JSON.parse(cache);
-                        } catch (e) {
-                            localStorage.removeItem("answerTypes");
-                        }
-                    }
-                    // Load test type cache
-                    cache = localStorage.getItem("repeatTest");
-                    if (cache) {
-                        try {
-                            this.repeatTest = JSON.parse(cache);
-                        } catch (e) {
-                            localStorage.removeItem("repeatTest");
-                        }
-                    }
+                    })
                 }, response => {
                     // error callback
                     console.log("error loading data")
