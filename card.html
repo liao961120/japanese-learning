@@ -32,19 +32,16 @@
             <img v-if="answerTypes.includes('hiragana')" :src="currChar.img_hira" :alt="currChar.hiragana">
             <img v-if="answerTypes.includes('katakana')" :src="currChar.img_kata" :alt="currChar.katakana">
         </div>
-        
+
 
         <template v-if="currChar !== null">
-            <audio v-if="hintTypes.includes('audio') & showAnswer == false" 
-            controls :src="currChar.audio">
+            <audio v-if="hintTypes.includes('audio') & showAnswer == false" controls :src="currChar.audio">
                 Your browser does not support the <code>audio</code> element.
             </audio>
-            <audio v-else-if="answerTypes.includes('audio') & showAnswer == true" 
-            controls :src="currChar.audio">
+            <audio v-else-if="answerTypes.includes('audio') & showAnswer == true" controls :src="currChar.audio">
                 Your browser does not support the <code>audio</code> element.
             </audio>
-            <div class="audioPlaceholder" 
-            v-else-if="answerTypes.includes('audio') | hintTypes.includes('audio')"></div>
+            <div class="audioPlaceholder" v-else-if="answerTypes.includes('audio') | hintTypes.includes('audio')"></div>
         </template>
         <div class="audioPlaceholder" v-else v-show="hintTypes.includes('audio') | answerTypes.includes('audio')"></div>
 
@@ -54,6 +51,15 @@
             {{ showAnswer ? 'Next' : 'Show Answer' }}
         </button>
 
+        <div class="control repeat">
+            <span>
+                <input type="checkbox" v-model="repeatTest">
+                <label>Repeat</label>
+            </span>
+            <span v-if="!repeatTest">
+                ({{ this.selected.length - this.sampled.length }} left)
+            </span>
+        </div>
         <div class="control hintOps">
             <span>
                 <input type="checkbox" value="roman" v-model="hintTypes">
@@ -116,15 +122,21 @@
             data: {
                 chars: [],
                 selected: [],
+                sampled: [],
                 allSelected: false,
                 currChar: null,
                 hintTypes: ["roman", "audio"],
                 answerTypes: ["katakana"],
+                repeatTest: true,
                 showAnswer: false,
                 hideCandidates: false,
                 audioCache: {},
             },
-            // computed: {},
+            computed: {
+                sampledChar() {
+                    return this.sampled.map(char => char.hiragana)
+                }
+            },
             methods: {
                 selectAll: function () {
                     this.selected = this.chars;
@@ -137,21 +149,46 @@
                 },
                 nextChar: function () {
                     if (this.showAnswer) {
-                        if (this.selected.length < 2) return
-                        var sample = this.selected[Math.floor(Math.random() * this.selected.length)];
-                        while (this.currChar === sample)
-                            sample = this.selected[Math.floor(Math.random() * this.selected.length)];
-                        this.currChar = sample;
-                        
-                        if (this.hintTypes.includes("audio")) 
-                            this.audioCache[this.currChar.audio].play();
-                        
-                        this.showAnswer = false;
+                        if (this.repeatTest)
+                            this.sampleNextCharWithReplace();
+                        else
+                            this.sampleNextCharWithoutReplace();
                     } else {
                         this.showAnswer = true;
                         if (this.answerTypes.includes("audio"))
                             this.audioCache[this.currChar.audio].play();
                     }
+                },
+                sampleNextCharWithReplace: function () {
+                    if (this.selected.length < 2) return
+
+                    // Sample with replacement
+                    var sample = this.selected[Math.floor(Math.random() * this.selected.length)];
+                    while (this.currChar === sample)
+                        sample = this.selected[Math.floor(Math.random() * this.selected.length)];
+                    this.currChar = sample;
+
+                    if (this.hintTypes.includes("audio"))
+                        this.audioCache[this.currChar.audio].play();
+
+                    this.showAnswer = false;
+                },
+                sampleNextCharWithoutReplace: function () {
+                    if (this.sampled.length == this.selected.length) return
+
+                    // Sample without replacement
+                    var pool = this.selected.filter(x => !this.sampledChar.includes(x.hiragana));
+                    var sample = pool[Math.floor(Math.random() * pool.length)];
+
+                    // Update
+                    this.currChar = sample;
+                    this.sampled.push(sample);
+
+                    // Play audio
+                    if (this.hintTypes.includes("audio"))
+                        this.audioCache[this.currChar.audio].play();
+
+                    this.showAnswer = false;
                 }
             },
             created: function () {
@@ -159,7 +196,7 @@
                     // get body data
                     this.chars = response.body;
                     // Preload all audio
-                    for (var i=0; i<this.chars.length; i++) {
+                    for (var i = 0; i < this.chars.length; i++) {
                         var audio = this.chars[i].audio;
                         this.audioCache[audio] = new Audio(audio);
                     }
@@ -169,7 +206,7 @@
                     if (cache) {
                         try {
                             this.selected = JSON.parse(cache);
-                        } catch(e) {
+                        } catch (e) {
                             localStorage.removeItem("selected");
                         }
                     }
@@ -182,7 +219,7 @@
                     if (cache) {
                         try {
                             this.hintTypes = JSON.parse(cache);
-                        } catch(e) {
+                        } catch (e) {
                             localStorage.removeItem("hintTypes");
                         }
                     }
@@ -191,8 +228,17 @@
                     if (cache) {
                         try {
                             this.answerTypes = JSON.parse(cache);
-                        } catch(e) {
+                        } catch (e) {
                             localStorage.removeItem("answerTypes");
+                        }
+                    }
+                    // Load test type cache
+                    cache = localStorage.getItem("repeatTest");
+                    if (cache) {
+                        try {
+                            this.repeatTest = JSON.parse(cache);
+                        } catch (e) {
+                            localStorage.removeItem("repeatTest");
                         }
                     }
                 }, response => {
@@ -210,6 +256,9 @@
                 answerTypes() {
                     localStorage.setItem("answerTypes", JSON.stringify(this.answerTypes));
                 },
+                repeatTest() {
+                    localStorage.setItem("repeatTest", JSON.stringify(this.repeatTest));
+                }
             }
         })
     </script>
@@ -235,7 +284,9 @@
             font-family: 'Times New Roman', Times, serif;
             font-style: italic;
         }
-        audio, .audioPlaceholder {
+
+        audio,
+        .audioPlaceholder {
             display: block;
             width: 270px;
             height: 30px;
@@ -262,11 +313,13 @@
         .control>* {
             margin: 0 .15em;
         }
+
         .hintOps::before {
             content: "Hint:";
             display: inline-block;
             width: 2.2em;
         }
+
         .ansOps::before {
             content: "Ans:";
             display: inline-block;
@@ -283,16 +336,19 @@
             flex-direction: column;
             flex-wrap: wrap;
         }
+
         .candidates {
             display: flex;
             flex-direction: row;
             justify-content: center;
             margin-top: 1.7em;
         }
-        .candidates > button {
+
+        .candidates>button {
             min-width: 6em;
             margin: 0 .5em;
         }
+
         .displayLabel {
             display: block;
             width: 4.1em;
@@ -302,10 +358,12 @@
             font-weight: bold;
             text-align: center;
         }
+
         .ansLab {
             background: red;
             color: white;
         }
+
         .hintLab {
             background: black;
             color: rgb(0, 255, 0);
