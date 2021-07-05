@@ -5,5 +5,5 @@
 
 
 <style>
-body {font-size: 25px;}
+    body {font-size: 25px;}
 </style>

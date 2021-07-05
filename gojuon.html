@@ -250,6 +250,7 @@
                     localStorage.setItem("answerTypes", JSON.stringify(this.answerTypes));
                 },
                 repeatTest() {
+                    this.sampled = [];
                     localStorage.setItem("repeatTest", JSON.stringify(this.repeatTest));
                 }
             }
@@ -257,6 +258,11 @@
     </script>
 
     <style scoped>
+        body {
+            width: 100%;
+            padding: 0;
+            margin: 0;
+        }
         .hint {
             height: 120px;
             display: flex;
