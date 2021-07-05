@@ -21,7 +21,11 @@
         <p v-show="showAnswer" class="answer">
             {{ currWord[0] }}
         </p>
-        <p v-show="!showAnswer" class="answer">🔊</p>
+        
+        <p v-show="!showAnswer" class="answer icon" @click="playCurrentAudio">
+            🔊
+        </p>
+        
         <button @click="nextWord" class="next">
             {{ showAnswer ? 'Next' : 'Show Answer' }} <br />
             <span style="color:rgb(71, 71, 71);font-size:0.8em;">(press →)</span>
@@ -31,6 +35,15 @@
         <button @click="hideTerms = !hideTerms" class="hide">
             {{ hideTerms ? 'Show control' : 'Hide below' }}
         </button>
+        <div class="control repeat">
+            <span>
+                <input type="checkbox" v-model="repeatTest">
+                <label>Repeat</label>
+            </span>
+            <span v-if="!repeatTest">
+                ({{ this.loadedWordsSrc.length - this.sampled.length }} left)
+            </span>
+        </div>
         <div class="control" v-show="!hideTerms">
             <h3>Test Words</h3>
             <div class="loadedTerms">
@@ -67,13 +80,18 @@
                 ],
                 loadedWordsSrc: [],
                 loadedWords: [],
+                sampled: [],
                 showAnswer: false,
                 currWord: ['祝詞 [のりと][norito]', new Audio('https://tts.hjapi.com/jp/199013E6EDCC636B2E44D9D208D87ABA')],
                 hideTerms: false,
+                repeatTest: false,
             },
             computed: {
                 deckFiltered() {
                     return this.deck.filter(t => t[0].includes(this.deckFilter));
+                },
+                sampledWord() {
+                    return this.sampled.map(elem => elem[0])
                 }
             },
             watch: {
@@ -82,7 +100,8 @@
                     this.loadedWords = this.loadedWordsSrc.map(w => [w[0], new Audio(w[1])]);
                     if (this.loadedWordsSrc.length > 0)
                         localStorage.setItem("loadedWordsSrc", JSON.stringify(this.loadedWordsSrc));
-                }
+                },
+
             },
             methods: {
                 addTerm: function (term) {
@@ -95,19 +114,47 @@
                 rmTermLoaded: function (term) {
                     this.loadedWordsSrc = this.loadedWordsSrc.filter(t => t[0] !== term);
                 },
-                nextWord: function() {
+                nextWord: function () {
                     if (this.showAnswer) {
-                        if (this.loadedWords.length < 2) return
-                        var sample = this.loadedWords[Math.floor(Math.random() * this.loadedWords.length)];
-                        while (this.currWord === sample)
-                            sample = this.loadedWords[Math.floor(Math.random() * this.loadedWords.length)];
-                        this.currWord = sample;
-                        this.currWord[1].play();
-                        
-                        this.showAnswer = false;
+                        if (this.repeatTest)
+                            this.sampleNextWithReplace();
+                        else
+                            this.sampleNextWithoutReplace();
                     } else {
                         this.showAnswer = true;
                     }
+                },
+                sampleNextWithReplace: function () {
+                    if (this.loadedWords.length < 2) return
+
+                    // Sample with replacement
+                    var sample = this.loadedWords[Math.floor(Math.random() * this.loadedWords.length)];
+                    while (this.currWord[0] === sample[0])
+                        sample = this.loadedWords[Math.floor(Math.random() * this.loadedWords.length)];
+                    this.currWord = sample;
+
+                    this.currWord[1].play();
+
+                    this.showAnswer = false;
+                },
+                sampleNextWithoutReplace: function () {
+                    if (this.sampled.length == this.loadedWords.length) return
+
+                    // Sample without replacement
+                    var pool = this.loadedWords.filter(x => !this.sampledWord.includes(x[0]));
+                    var sample = pool[Math.floor(Math.random() * pool.length)];
+
+                    // Update
+                    this.currWord = sample;
+                    this.sampled.push(sample);
+
+                    // Play audio
+                    this.currWord[1].play();
+
+                    this.showAnswer = false;
+                },
+                playCurrentAudio: function() {
+                    this.currWord[1].play();
                 }
             },
             created: function() {
@@ -191,12 +238,15 @@
         }
 
         .answer {
-            min-height: 2.5em;
+            min-height: 5em;
             font-size: 2.3em;
             text-align: center;
             vertical-align: middle;
-            line-height: 2.3em;
+            line-height: 2em;
             margin: 0;
+        }
+        .answer.icon:hover {
+            cursor: pointer;
         }
         .displayLabel {
             display: block;
