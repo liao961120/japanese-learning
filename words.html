@@ -13,23 +13,29 @@
 
 <body>
     <div id="app">
-        <span class="displayLabel" :class="{ 'ansLab': showAnswer, hintLab: !showAnswer }">
-            {{ showAnswer ? 'Answer' : 'Hint' }}
-        </span>
-
-        <!-- Listening Test -->
-        <p v-show="showAnswer" class="answer">
-            {{ currWord[0] }}
-        </p>
-        
-        <p v-show="!showAnswer" class="answer icon" @click="playCurrentAudio">
-            🔊
-        </p>
-        
         <button @click="nextWord" class="next">
             {{ showAnswer ? 'Next' : 'Show Answer' }} <br />
             <span style="color:rgb(71, 71, 71);font-size:0.8em;">(press →)</span>
         </button>
+
+        <span class="displayLabel" :class="{ 'ansLab': showAnswer, hintLab: !showAnswer }">
+            {{ showAnswer ? 'Answer' : 'Hint' }}
+        </span>
+        
+        <!-- Hint -->
+        <div v-if="currWord !== null" v-show="!showAnswer" class="hint">
+            <span class="icon" @click="playCurrentAudio">🔊</span>
+            <span v-if="hintTypes.includes('word')" class="word">{{ currWord[0] }}</span>
+            <span v-if="hintTypes.includes('def')" class="def" v-html="currWordDef"></span>
+        </div>
+        <div v-else class="hint"></div>
+
+        <!-- Answer -->
+        <div class="answer hint" v-if="currWord !== null" v-show="showAnswer">
+            <span class="icon" @click="playCurrentAudio">🔊</span>
+            <span v-if="answerTypes.includes('word')" class="word">{{ currWord[0] }}</span>
+            <span v-if="answerTypes.includes('def')" class="def" v-html="currWordDef"></span>
+        </div>
 
         <!-- Add words (Server needed) -->
         <button @click="hideTerms = !hideTerms" class="hide">
@@ -44,6 +50,35 @@
                 ({{ this.loadedWordsSrc.length - this.sampled.length }} left)
             </span>
         </div>
+        <div class="control hintOps">
+            <span>
+                <input type="checkbox" value="word" v-model="hintTypes">
+                <label>Word</label>
+            </span>
+            <span>
+                <input type="checkbox" value="def" v-model="hintTypes">
+                <label>Gloss</label>
+            </span>
+            <span>
+                <input type="checkbox" value="audio" v-model="hintTypes">
+                <label>Audio</label>
+            </span>
+        </div>
+        <div class="control ansOps">
+            <span>
+                <input type="checkbox" value="word" v-model="answerTypes">
+                <label>Word</label>
+            </span>
+            <span>
+                <input type="checkbox" value="def" v-model="answerTypes">
+                <label>Gloss</label>
+            </span>
+            <span>
+                <input type="checkbox" value="audio" v-model="answerTypes">
+                <label>Audio</label>
+            </span>
+        </div>
+
         <div class="control" v-show="!hideTerms">
             <h3>Test Words</h3>
             <div class="loadedTerms">
@@ -82,9 +117,11 @@
                 loadedWords: [],
                 sampled: [],
                 showAnswer: false,
-                currWord: ['祝詞 [のりと][norito]', new Audio('https://tts.hjapi.com/jp/199013E6EDCC636B2E44D9D208D87ABA')],
+                currWord: ['祝詞 [のりと][norito]', new Audio('https://tts.hjapi.com/jp/199013E6EDCC636B2E44D9D208D87ABA'), 'Some definition'],
                 hideTerms: false,
                 repeatTest: false,
+                hintTypes: ["def", "audio"],
+                answerTypes: ["word", "def", "audio"],
             },
             computed: {
                 deckFiltered() {
@@ -92,12 +129,15 @@
                 },
                 sampledWord() {
                     return this.sampled.map(elem => elem[0])
+                },
+                currWordDef() {
+                    return this.currWord[2].replaceAll("\n", "<br />").replaceAll("simple explain:", "")
                 }
             },
             watch: {
                 loadedWordsSrc() {
                     // Preload audio
-                    this.loadedWords = this.loadedWordsSrc.map(w => [w[0], new Audio(w[1])]);
+                    this.loadedWords = this.loadedWordsSrc.map(w => [w[0], new Audio(w[1]), w[2]]);
                     if (this.loadedWordsSrc.length > 0)
                         localStorage.setItem("loadedWordsSrc", JSON.stringify(this.loadedWordsSrc));
                 },
@@ -120,8 +160,13 @@
                             this.sampleNextWithReplace();
                         else
                             this.sampleNextWithoutReplace();
+                        
+                        if (this.hintTypes.includes("audio"))
+                            this.currWord[1].play();
                     } else {
                         this.showAnswer = true;
+                        if (this.answerTypes.includes("audio"))
+                            this.currWord[1].play();
                     }
                 },
                 sampleNextWithReplace: function () {
@@ -132,8 +177,6 @@
                     while (this.currWord[0] === sample[0])
                         sample = this.loadedWords[Math.floor(Math.random() * this.loadedWords.length)];
                     this.currWord = sample;
-
-                    this.currWord[1].play();
 
                     this.showAnswer = false;
                 },
@@ -148,9 +191,6 @@
                     this.currWord = sample;
                     this.sampled.push(sample);
 
-                    // Play audio
-                    this.currWord[1].play();
-
                     this.showAnswer = false;
                 },
                 playCurrentAudio: function() {
@@ -159,7 +199,7 @@
             },
             created: function() {
                 // Load deck from JSON
-                this.$http.get('./server_words/words.json').then(response => {
+                this.$http.get('./server_words/words_all.json').then(response => {
                         // get body data
                         this.deck = response.body;
                     }, response => {
@@ -202,6 +242,17 @@
             font-size: 1em;
             margin: 1em auto;
         }
+        .hintOps::before {
+            content: "Hint:";
+            display: inline-block;
+            width: 2.2em;
+        }
+
+        .ansOps::before {
+            content: "Ans:";
+            display: inline-block;
+            width: 2.2em;
+        }
         .toQuery, .loadedTerms {
             width: 100%;
             max-width: 500px;
@@ -239,13 +290,13 @@
 
         .answer {
             min-height: 5em;
-            font-size: 2.3em;
+            font-size: 1.3em;
             text-align: center;
             vertical-align: middle;
-            line-height: 2em;
+            line-height: 1.3em;
             margin: 0;
         }
-        .answer.icon:hover {
+        .icon:hover {
             cursor: pointer;
         }
         .displayLabel {
@@ -264,6 +315,32 @@
         .hintLab {
             background: black;
             color: rgb(0, 255, 0);
+        }
+        .hint {
+            min-height: 200px;
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: center;
+            line-height: 30px;
+            vertical-align: middle;
+            border: 1px solid black;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .hint span {
+            display: block;
+        }
+        .icon {
+            font-size: 15px; 
+        }
+        .word {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .def {
+            margin-top: 15px;
+            font-size: 14px;
+            line-height: 14px;
         }
     </style>
 </body>

@@ -13,27 +13,32 @@ def lookup(term):
 
     heads = []
     append_next = False
+    entry = {'head': '', 'def': ''}
     for i, line in enumerate(output.split('\n')):
         if i == 0:
-            heads.append(line)
+            entry["head"] = line.strip()
             continue
         if line.strip() == '':
+            if entry["head"] != '':
+                heads.append(entry.copy())
             append_next = True
+            entry = {'head': '', 'def': ''}
             continue
         if append_next:
-            heads.append(line.strip())
+            entry["head"] = line.strip()
             append_next = False
+            continue
+        entry["def"] += line + '\n'
 
     matched = []
     for head in heads:
-        word = pat_word.search(head)
-        url = pat_url.search(head)
+        word = pat_word.search(head["head"])
+        url = pat_url.search(head["head"])
 
         if word is None or url is None:
-            print(f"Failed to match {head}")
-            print(head)
+            print(f"Failed to match {head['head']}")
         else:
-            matched.append([word[0], url[0]])
+            matched.append([word[0], url[0], head["def"]])
 
     if len(matched) == 0:
         print(f"Failed to match {output}")

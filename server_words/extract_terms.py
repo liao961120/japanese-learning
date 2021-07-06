@@ -1,5 +1,7 @@
 #%%
+import time
 import json
+import random
 import logging
 from utils import lookup, download_audio
 
@@ -19,6 +21,7 @@ with open("wordlist.txt", encoding="utf-8") as f:
 
 output = []
 for word in words:
+    time.sleep(3 + random.uniform(0, 1))
     # Search word in online dict
     query = lookup(word)
     if query is None: 
@@ -26,8 +29,9 @@ for word in words:
         continue
     # Download audio
     for word in query:
-        audio_path = download_audio(word[1])
-        output.append([word[0], audio_path])
+        word, audio, gloss = word
+        audio = download_audio(audio)
+        output.append([word, audio, gloss])
 
 
 with open("words.json", "w", encoding="utf-8") as f:
